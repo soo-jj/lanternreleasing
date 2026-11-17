@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>풍등 – 고민 날리기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+:root{--night:#0d1730;--deep:#18284d;--mist:#93a6d2;--glow:#ffd267;--ember:#ff9f43;--paper:#f3ead2;--ink:#3a2e1c;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden;background:var(--night);color:var(--mist);font-family:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+#stage{position:relative;height:100%;background:linear-gradient(var(--night),var(--deep) 85%,#233a6b);overflow:hidden}
+.star{position:absolute;width:3px;height:3px;border-radius:50%;background:#dfe7ff;box-shadow:0 0 6px #dfe7ff88;opacity:0;transition:opacity 1.2s}
+.star.on{opacity:.8;animation:tw 4s var(--d) ease-in-out infinite}
+.star.new{animation:pop 1.4s ease-out,tw 4s calc(1.4s + var(--d)) ease-in-out infinite}
+.burst .star.on{animation:burst 1.6s ease-in-out}
+@keyframes tw{50%{opacity:.35}}
+@keyframes pop{0%{transform:scale(0);opacity:0}40%{transform:scale(3);opacity:1}100%{transform:scale(1);opacity:.8}}
+@keyframes burst{50%{transform:scale(3.5);opacity:1;box-shadow:0 0 16px #fff}}
+h1{position:absolute;top:calc(env(safe-area-inset-top,0px) + 22px);width:100%;text-align:center;font-size:17px;font-weight:400;letter-spacing:.08em}
+#count{position:absolute;top:calc(env(safe-area-inset-top,0px) + 50px);width:100%;text-align:center;font-size:13px;opacity:.7}
+#write{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:70px;padding-bottom:30px;transition:opacity .6s}
+#note{position:relative;width:min(86vw,340px);background:var(--paper);color:var(--ink);border-radius:4px;padding:18px 18px 12px;box-shadow:0 10px 40px #0008,0 0 0 6px #e4d6b222;transition:transform .7s ease,opacity .7s}
+#note textarea{width:100%;height:190px;resize:none;border:0;outline:0;background:none;font:inherit;font-size:18px;line-height:32px;color:var(--ink)}
+#note textarea::placeholder{color:#9a8a68}
+#go{margin-top:22px;border:0;border-radius:24px;padding:12px 28px;font:inherit;font-size:16px;font-weight:700;background:var(--glow);color:#4a3200;cursor:pointer;box-shadow:0 0 22px #ffd26766;transition:opacity .3s,transform .2s}
+#go:disabled{opacity:.35;box-shadow:none;cursor:default}
+#go:active:not(:disabled){transform:scale(.96)}
+#pencil{position:absolute;left:calc(100% - 100px);top:calc(100% - 40px);width:150px;height:44px;transform-origin:0 50%;transform:rotate(38deg);opacity:0;pointer-events:none;filter:drop-shadow(0 6px 8px #0006)}
+#note.in #pencil{animation:ppop .5s cubic-bezier(.3,1.25,.5,1) .15s both}
+@keyframes ppop{from{opacity:0;transform:translate(40px,50px) rotate(38deg)}to{opacity:1;transform:rotate(38deg)}}
+.sending #note{transform:translateY(-30px) scale(.4);opacity:0}
+.sending #go{opacity:0;pointer-events:none}
+#char{position:absolute;left:50%;bottom:0;width:150px;height:200px;margin-left:-75px;transform:translateY(105%);transition:transform .8s cubic-bezier(.3,1.3,.5,1)}
+#char.up{transform:none}
+#lanterns{position:absolute;inset:0;pointer-events:none}
+.lantern{position:absolute;left:50%;bottom:150px;width:68px;margin-left:-34px;text-align:center}
+.lantern .body{height:84px;border-radius:14px 14px 10px 10px/20px 20px 10px 10px;background:linear-gradient(#ffe699,var(--glow) 55%,var(--ember));box-shadow:0 0 40px 12px #ffc84a77,0 0 90px 30px #ff9f4333;display:flex;align-items:center;justify-content:center;padding:8px 6px;overflow:hidden;font-size:10px;line-height:1.3;color:#5a3a00;word-break:keep-all}
+.lantern .body span{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.lantern::before{content:"";display:block;width:44px;height:6px;margin:0 auto;background:#6a4a1a;border-radius:3px 3px 0 0}
+.lantern::after{content:"";display:block;width:2px;height:12px;margin:0 auto;background:#6a4a1a}
+#msg{position:absolute;top:42%;width:100%;text-align:center;font-size:19px;color:#dfe7ff;opacity:0;transition:opacity 1s;pointer-events:none}
+#msg.show{opacity:1}
+#pick{position:absolute;inset:0;z-index:5;background:var(--night);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity .6s}
+#pick.hide{opacity:0;pointer-events:none}
+#pick p{font-size:18px;color:#dfe7ff}
+.opts{display:flex;gap:18px}
+.opt{display:flex;flex-direction:column;align-items:center;gap:10px;font-size:16px;background:#ffffff0d;border:1px solid #93a6d255;border-radius:16px;padding:14px 10px 10px;width:130px;color:var(--mist);font:inherit;cursor:pointer}
+.opt:focus-visible,#go:focus-visible,#swap:focus-visible,#reset:focus-visible{outline:2px solid var(--glow);outline-offset:3px}
+.opt svg{display:block;width:90px;height:120px}
+#swap,#reset{position:absolute;left:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);background:none;border:0;color:var(--mist);font:inherit;font-size:12px;opacity:.6;cursor:pointer;z-index:3}
+#again{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 56px);left:50%;transform:translateX(-50%);border:0;border-radius:24px;padding:12px 28px;font:inherit;font-size:16px;font-weight:700;background:var(--glow);color:#4a3200;cursor:pointer;box-shadow:0 0 22px #ffd26766;opacity:0;pointer-events:none;transition:opacity .8s}
+#again.show{opacity:1;pointer-events:auto}
+#again:focus-visible{outline:2px solid #fff;outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.star,.star.on,.star.new,.burst .star.on{animation:none}}
+#reset{left:auto;right:14px}
+#ask{position:absolute;inset:0;z-index:6;background:#0d1730e6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;padding:0 30px;color:#dfe7ff;font-size:16px;line-height:1.6;opacity:0;pointer-events:none;transition:opacity .4s}
+#ask.show{opacity:1;pointer-events:auto}
+#ask .row{display:flex;gap:12px}
+#ask button{border:0;border-radius:20px;padding:10px 22px;font:inherit;font-size:15px;cursor:pointer;background:#ffffff1a;color:#dfe7ff}
+#ask button.ok{background:var(--glow);color:#4a3200;font-weight:700}
+#ask button:focus-visible{outline:2px solid var(--glow);outline-offset:3px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <h1>오늘의 고민, 풍등에 실어 보내요</h1>
+  <div id="count"></div>
+  <div id="lanterns"></div>
+  <div id="write">
+    <div id="note"><textarea id="txt" maxlength="120" placeholder="마음에 걸리는 고민을 적어 보세요"></textarea>
+      <svg id="pencil" viewBox="0 0 150 44" aria-hidden="true"><g stroke="#7f4a4a" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M3 22L32 5V39Z" fill="#f6dfbd"/><path d="M3 22L13 16V28Z" fill="#7f4a4a"/><rect x="32" y="5" width="82" height="34" fill="#fcd36b"/><path d="M32 27H114V39H32Z" fill="#ecb34e"/><path d="M32 16H114" stroke="#d09050" stroke-width="2"/><rect x="114" y="4" width="16" height="36" rx="2" fill="#cfd2d9"/><path d="M130 5H140Q148 5 148 13V31Q148 39 140 39H130Z" fill="#ffc4cb"/></g></svg>
+    </div>
+    <button id="go" disabled>풍등 날리기</button>
+    
+    <div id="msg"></div>
+    <button id="again">고민 작성하기</button>
+  </div>
+  <div id="char" aria-hidden="true"></div>
+  <button id="swap">캐릭터 바꾸기</button>
+  <button id="reset">기록 지우기</button>
+  <div id="ask"><p>누적 개수, 별, 캐릭터 선택이 모두 지워져서<br>처음 상태로 돌아가요. 지울까요?</p><div class="row"><button id="no">취소</button><button id="yes" class="ok">지우기</button></div></div>
+  <div id="pick">
+    <p>함께할 캐릭터를 골라 주세요</p>
+    <div class="opts">
+      <button class="opt" data-g="f"><span class="ph"></span>여자</button>
+      <button class="opt" data-g="m"><span class="ph"></span>남자</button>
+    </div>
+  </div>
+</div>
+<script>
+const $=s=>document.querySelector(s); let gen=0; const sleep=ms=>{const g=gen;return new Promise((ok,no)=>setTimeout(()=>g===gen?ok():no(),ms))};
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let gender=store.get("gender"), total=+store.get("total")||0, busy=false;
+
+const STARS=30, stars=[]; let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+for(let i=0;i<STARS;i++){const s=document.createElement("i");s.className="star";
+  s.style.cssText=`left:${4+rnd()*92}%;top:${8+rnd()*62}%;--d:${rnd()*4}s`;
+  $("#stage").prepend(s);stars.push(s);}
+stars.slice(0,total%STARS).forEach(s=>s.classList.add("on"));
+
+function charSVG(g){
+  const O="#2a2340", hair="#241d33", skin="#fbe0c8", cloth=g==="f"?"#f3d9a2":"#6f93c9", sw='stroke-width="2.4"';
+  const arm=d=>`<path d="${d}" fill="none" stroke="${O}" stroke-width="15" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${cloth}" stroke-width="10.5" stroke-linecap="round"/>`;
+  const hand=x=>`<circle cx="${x}" cy="32" r="6.5" fill="${skin}" stroke="${O}" ${sw}/>`;
+  const ear=x=>`<circle cx="${x}" cy="56" r="4.5" fill="${skin}" stroke="${O}" ${sw}/>`;
+  const head=g==="f"
+    ?`<path d="M38 52Q34 92 40 114Q60 121 80 114Q86 92 82 52Q82 26 60 26Q38 26 38 52Z" fill="${hair}" stroke="${O}" ${sw} stroke-linejoin="round"/><path d="M52 40Q49 72 52 104M68 40Q71 72 68 104" fill="none" stroke="#403653" stroke-width="2" stroke-linecap="round"/>`
+    :`${ear(38.5)}${ear(81.5)}<path d="M38 52Q35 26 60 25Q85 26 82 52Q82 66 60 69Q38 66 38 52Z" fill="${hair}" stroke="${O}" ${sw} stroke-linejoin="round"/>`;
+  return `<svg viewBox="0 0 120 160">
+  ${arm("M46 106Q14 80 36 34")}${arm("M74 106Q106 80 84 34")}
+  <path d="M24 160Q22 100 44 86Q60 80 76 86Q98 100 96 160Z" fill="${cloth}" stroke="${O}" ${sw} stroke-linejoin="round"/>
+  <path d="M52 64h16v16q-8 5-16 0z" fill="${skin}" stroke="${O}" ${sw} stroke-linejoin="round"/>
+  ${head}${hand(36)}${hand(84)}</svg>`;
+}
+document.querySelectorAll(".opt").forEach(b=>{b.querySelector(".ph").innerHTML=charSVG(b.dataset.g);
+  b.onclick=()=>{gender=b.dataset.g;store.set("gender",gender);setChar();$("#pick").classList.add("hide");popPencil()}});
+function setChar(){$("#char").innerHTML=charSVG(gender)}
+$("#swap").onclick=()=>$("#pick").classList.remove("hide");
+$("#reset").onclick=()=>$("#ask").classList.add("show");
+$("#no").onclick=()=>$("#ask").classList.remove("show");
+$("#yes").onclick=()=>{gen++;busy=false;$("#char").classList.remove("up");$("#stage").classList.remove("burst");$("#again").classList.remove("show");$("#msg").classList.remove("show");$("#write").classList.remove("sending");$("#txt").value="";$("#go").disabled=true;popPencil();store.set("total",0);store.set("gender","");total=0;gender="";stars.forEach(s=>s.classList.remove("on","new"));$("#lanterns").innerHTML="";$("#char").innerHTML="";showCount();$("#ask").classList.remove("show");$("#pick").classList.remove("hide")};
+if(gender){setChar();$("#pick").classList.add("hide")}
+function showCount(){$("#count").textContent=total?`지금까지 날려 보낸 고민 ${total}개`:""}
+showCount();
+
+const txt=$("#txt"), go=$("#go");
+function popPencil(){const n=$("#note");n.classList.remove("in");void n.offsetWidth;n.classList.add("in")}
+popPencil();
+txt.oninput=()=>{go.disabled=!txt.value.trim()};
+
+go.onclick=()=>run().catch(()=>{});
+async function run(){
+  if(busy||!txt.value.trim())return; busy=true;
+  const worry=txt.value.trim();
+  $("#write").classList.add("sending");
+  await sleep(700);
+  $("#char").classList.add("up");
+  await sleep(900);
+  const l=document.createElement("div"); l.className="lantern";
+  const sp=document.createElement("span"); sp.textContent=worry;
+  const body=document.createElement("div"); body.className="body"; body.appendChild(sp);
+  l.appendChild(body); $("#lanterns").appendChild(l);
+  l.animate([{transform:"scale(.2)",opacity:0},{transform:"scale(1)",opacity:1}],{duration:700,easing:"ease-out"});
+  await sleep(1300);
+  const H=innerHeight, drift=(Math.random()<.5?-1:1)*(30+Math.random()*50);
+  l.animate([
+    {transform:"translate(0,0) scale(1)",opacity:1},
+    {transform:`translate(${drift}px,${-H*.35}px) scale(.8)`,opacity:1,offset:.4},
+    {transform:`translate(${-drift*.6}px,${-H*.7}px) scale(.55)`,opacity:.8,offset:.75},
+    {transform:`translate(${drift*.4}px,${-H*1.05}px) scale(.3)`,opacity:0}
+  ],{duration:9000,easing:"ease-in",fill:"forwards"}).onfinish=()=>l.remove();
+  await sleep(500);
+  $("#char").classList.remove("up");
+  total++; store.set("total",total); showCount();
+  const full=total%STARS===0, s=stars[(total-1)%STARS];
+  $("#msg").textContent=full?"별이 가득 차서 하늘이 새로 열려요":"고민이 하늘로 떠올랐어요"; $("#msg").classList.add("show");
+  s.classList.add("on","new");
+  if(full){await sleep(2800);$("#stage").classList.add("burst");await sleep(1700);$("#stage").classList.remove("burst");stars.forEach(x=>x.classList.remove("on","new"));await sleep(1400);}
+  else await sleep(2000);
+  $("#again").classList.add("show");
+};
+$("#again").onclick=()=>{$("#again").classList.remove("show");$("#msg").classList.remove("show");txt.value="";go.disabled=true;$("#write").classList.remove("sending");popPencil();busy=false;};
+</script>
+</body>
+</html>
